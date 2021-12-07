@@ -134,7 +134,7 @@ public class BaseElement {
             browser.getDriver().switchTo().window(winHandle);
         }
         browser.getDriver().get("chrome://downloads");
-        JavascriptExecutor downloadWindowExecutor = (JavascriptExecutor) Browser.getInstance().getDriver();
+        JavascriptExecutor downloadWindowExecutor = (JavascriptExecutor) browser.getDriver();
         Long percentage = (long) 0;
         while (percentage != 100 && !isDownloadsExists()) {
             try {
