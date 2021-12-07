@@ -8,14 +8,14 @@ import org.openqa.selenium.*;
 
 public class GamePage extends BaseSteamPage {
     public GamePage() {
-        super(By.xpath("//img[@class='game_header_image_full']"));
+        super(By.xpath("//div[@class='blockbg']"));
     }
 
 
     private Label lblGameName = new Label(By.xpath("//div[@id='appHubAppName']"));
 
 
-    public String getGameName(String year) {
+    public String getGameName() {
         return lblGameName.getText();
     }
 

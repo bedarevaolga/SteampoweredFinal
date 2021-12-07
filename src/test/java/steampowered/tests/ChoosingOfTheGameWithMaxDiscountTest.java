@@ -35,7 +35,7 @@ public class ChoosingOfTheGameWithMaxDiscountTest {
         mainPage.navigateSection("section", "subSection");
 
         ActionPage actionPage = new ActionPage();
-      //  actionPage.choseGameWithMaxDiscount();
+       actionPage.choseGameWithMaxDiscount();
 
         if(currentBrowser.getDriver().getCurrentUrl().contains("agecheck")) {
             ValidationAgePage validationAgePage = new ValidationAgePage();
@@ -45,12 +45,13 @@ public class ChoosingOfTheGameWithMaxDiscountTest {
         GamePage gamePage = new GamePage();
 
         SoftAssert softAssert = new SoftAssert();
-        softAssert.assertEquals(gamePage.getGameName(year), ActionPage.getGameNameWithMaxDiscount());
+
+        softAssert.assertEquals(gamePage.getGameName(), ActionPage.getGameNameWithMaxDiscount());
         gamePage.clickInstallSteam("installSteam");
 
         InstallPage installPage = new InstallPage();
         installPage.installGame();
-        softAssert.assertTrue(installPage.isDownloadsExists());
+        softAssert.assertTrue(installPage.isFileDownloaded());
     }
 
     @AfterClass

@@ -50,6 +50,7 @@ public final class Browser {
     public  void teardown() {
         try {
             instance = null;
+            driver.close();
             driver.quit();
         } catch (Exception e) {
             e.printStackTrace();

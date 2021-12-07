@@ -1,6 +1,5 @@
 package framework.elements;
 
-import framework.BaseEntity;
 import framework.Browser;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
@@ -12,6 +11,7 @@ import org.testng.Assert;
 
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -19,14 +19,15 @@ import static framework.Browser.*;
 import static framework.Browser.getImplicitlyWait;
 
 
-public class BaseElement extends BaseEntity {
+public class BaseElement {
+
 
     protected static Browser browser = Browser.getInstance();
     protected String name;
     protected By locator;
     protected WebElement element;
     protected List<WebElement> list;
-   // protected List<Label> baseElementList;
+    protected List<BaseElement> baseElementList;
 
     public BaseElement() {
     }
@@ -38,35 +39,11 @@ public class BaseElement extends BaseEntity {
     protected BaseElement(final WebElement webEl) {
         element = webEl;
     }
+
     protected BaseElement(final By loc, final String nameOf) {
         locator = loc;
         name = nameOf;
     }
-
-    protected BaseElement(String nameOf, final String nameOfElement) {
-        name = nameOf;
-    }
-
-
-//    public WebElement findElement(By locator) {
-//        return new WebDriverWait(browser.getDriver(), getImplicitlyWait())
-//                .until(driver -> driver.findElement(locator));
-//    }
-//
-    public List<WebElement> findElements(By locator) {
-        return new WebDriverWait(browser.getDriver(), getImplicitlyWait())
-                .until(driver -> driver.findElements(locator));
-    }
-
-    public WebElement findElementByName(String locator, String name) {
-        return new WebDriverWait(browser.getDriver(), getImplicitlyWait())
-                .until(driver -> driver.findElement(By.xpath(String.format(locator, name))));
-    }
-
-//    public List<WebElement> findElementsByName(String locator, String name) {
-//        return new WebDriverWait(browser.getDriver(), getImplicitlyWait())
-//                .until(driver -> driver.findElements(By.xpath(String.format(locator, name))));
-//    }
 
     public void waitForPageToLoad() {
         new WebDriverWait(browser.getDriver(), Integer.parseInt(configLoader.getProperty("waitForPageToLoad"))).until((ExpectedCondition<Boolean>) wd ->
@@ -77,11 +54,6 @@ public class BaseElement extends BaseEntity {
         new WebDriverWait(browser.getDriver(), Integer.parseInt(configLoader.getProperty("waitElementBeClickable"))).until(ExpectedConditions
                 .elementToBeClickable(element));
     }
-
-//    public void waitElementBeClickable(By locator) {
-//        new WebDriverWait(browser.getDriver(), Integer.parseInt(configLoader.getProperty("waitElementBeClickable"))).until(ExpectedConditions
-//                .elementToBeClickable(locator));
-//    }
 
     public boolean isElementPresentedOnPage(By locator) {
         boolean isElementDisplayed = true;
@@ -94,33 +66,17 @@ public class BaseElement extends BaseEntity {
         return isElementDisplayed;
     }
 
-//    public String getText() {
-//        waitElementBeClickable(element);
-//        return element.getText();
-//    }
-
-//    public String getText(By locator) {
-//        waitElementBeClickable(locator);
-//        return findElement(locator).getText();
-//    }
-    public String getText() {
-        waitForIsElementPresent();
-        return element.getText();
-    }
-    public String getText(WebElement element) {
+    public String getTextValue() {
         waitElementBeClickable(element);
         return element.getText();
     }
 
-//    public void clickElement(By locator) {
-//        waitElementBeClickable(locator);
-//        if (browser.getDriver() instanceof JavascriptExecutor) {
-//            ((JavascriptExecutor) browser.getDriver()).executeScript("arguments[0].style.border='3px solid red'", findElement(locator));
-//        }
-//        findElement(locator).click();
-//    }
+    public String getText() {
+        waitForIsElementPresent();
+        return element.getText();
+    }
 
-    public void clickElement(WebElement element) {
+    public void click() {
         waitElementBeClickable(element);
         if (browser.getDriver() instanceof JavascriptExecutor) {
             ((JavascriptExecutor) browser.getDriver()).executeScript("arguments[0].style.border='3px solid red'", element);
@@ -136,17 +92,9 @@ public class BaseElement extends BaseEntity {
         element.click();
     }
 
-    public void clickAndWait(String xpath, String name) {
-        clickElement(findElementByName(xpath, name));
-        waitForPageToLoad();
-    }
     public void clickAndWait() {
         waitForIsElementPresent();
-        clickElement(element);
-        waitForPageToLoad();
-    }
-    public void clickAndWait(WebElement element) {
-        clickElement(element);
+        clickElement();
         waitForPageToLoad();
     }
 
@@ -167,20 +115,44 @@ public class BaseElement extends BaseEntity {
         action.moveToElement(element).build().perform();
     }
 
-    public void moveToElement(WebElement element) {
 
-        Actions action = new Actions(browser.getDriver());
-        action.moveToElement(element).build().perform();
-    }
-
-
-    public boolean isDownloadsExists() {
+    public static boolean isDownloadsExists() {
 
         WebDriverWait wait = new WebDriverWait(browser.getDriver(), getForPageToLoadWait());
         String downloadPath = System.getProperty("user.dir") + "\\" + configLoader.getProperty("downloadPath");
         File file = new File(downloadPath + configLoader.getProperty("downloadedFile"));
-       wait.until(driver -> file.exists());
+        wait.until(driver -> file.exists());
         return file.exists();
+    }
+
+    public static boolean isFileLoadingComplete() {
+
+        String mainWindow = browser.getDriver().getWindowHandle();
+        JavascriptExecutor js = (JavascriptExecutor) Browser.getInstance().getDriver();
+        js.executeScript("window.open()");
+        for (String winHandle : browser.getDriver().getWindowHandles()) {
+            browser.getDriver().switchTo().window(winHandle);
+        }
+        browser.getDriver().get("chrome://downloads");
+        JavascriptExecutor downloadWindowExecutor = (JavascriptExecutor) Browser.getInstance().getDriver();
+        Long percentage = (long) 0;
+        while (percentage != 100 && !isDownloadsExists()) {
+            try {
+                percentage = (long) downloadWindowExecutor.executeScript("return document.querySelector('downloads-manager').shadowRoot.querySelector('#downloadsList downloads-item').shadowRoot.querySelector('#progress').value");
+                System.out.println(percentage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        browser.getDriver().close();
+        browser.getDriver().switchTo().window(mainWindow);
+        return true;
+    }
+
+    public static boolean isFileLoadingCompleteWaiter() {
+        WebDriverWait wait = new WebDriverWait(browser.getDriver(), getForPageToLoadWait());
+        wait.until(driver -> isFileLoadingComplete());
+        return true;
     }
 
     public static void deleteInstalledFile() {
@@ -195,23 +167,20 @@ public class BaseElement extends BaseEntity {
         WebDriverWait wait = new WebDriverWait(browser.getDriver(), getImplicitlyWait());
         browser.getDriver().manage().timeouts().implicitlyWait(getImplicitlyWait(), TimeUnit.SECONDS);
         try {
-            wait.until((ExpectedCondition<Boolean>) new ExpectedCondition<Boolean>() {
-                public Boolean apply(final WebDriver driver) {
-                    try {
-                        //List<WebElement>
-                                list = driver.findElements(locator);
-                        for (WebElement el : list) {
-                            if (el instanceof WebElement && el.isDisplayed()) {
-                                element =  el;
-                                return element.isDisplayed();
-                            }
+            wait.until((ExpectedCondition<Boolean>) driver -> {
+                try {
+                    list = driver.findElements(locator);
+                    for (WebElement el : list) {
+                        if (el instanceof WebElement && el.isDisplayed()) {
+                            element = el;
+                            return element.isDisplayed();
                         }
-                        element =  driver.findElement(locator);
-                    } catch (Exception e) {
-                        return false;
                     }
-                    return element.isDisplayed();
+                    element = driver.findElement(locator);
+                } catch (Exception e) {
+                    return false;
                 }
+                return element.isDisplayed();
             });
         } catch (Exception e) {
             return false;
@@ -224,17 +193,18 @@ public class BaseElement extends BaseEntity {
         }
         return false;
     }
+
     public void waitForIsElementPresent() {
         isPresent();
-        Assert.assertTrue( element.isDisplayed());
-    }
-    public WebElement getElement() {
-        waitForIsElementPresent();
-        return element;
-    }
-    public List<WebElement> getElements() {
-        waitForIsElementPresent();
-        return list;
+        Assert.assertTrue(element.isDisplayed());
     }
 
+    public List<BaseElement> getElements() {
+        baseElementList = new ArrayList<>();
+        waitForIsElementPresent();
+        for (WebElement webElement : list) {
+            baseElementList.add(new BaseElement(webElement));
+        }
+        return baseElementList;
+    }
 }

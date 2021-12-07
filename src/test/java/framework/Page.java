@@ -1,28 +1,22 @@
 package framework;
 
+
 import framework.elements.BaseElement;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.PageFactory;
 import org.testng.Assert;
 
-import java.util.Date;
+public abstract class Page {
 
-public class Page {
+    protected BaseElement baseElement;
+    protected static By titleLocator;
 
+    protected Page(final By locator) {
+        init(locator);
+        baseElement = new BaseElement();
+        Assert.assertTrue(baseElement.isElementPresentedOnPage(locator));
+    }
 
-
+    private void init(final By locator) {
+        titleLocator = locator;
+    }
 }
-
-
-//    protected final WebDriver driver;
-//
-//    protected BaseElement baseElement;
-
-//    public Page(WebDriver driver) {
-//
-//        PageFactory.initElements(driver, this);
-//        this.driver = driver;
-//
-//    }
-

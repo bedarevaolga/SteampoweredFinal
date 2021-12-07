@@ -1,8 +1,13 @@
 package steampowered.pages;
 
 import framework.BaseSteamPage;
+import framework.Browser;
 import framework.elements.Button;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+
+import static framework.elements.BaseElement.isDownloadsExists;
+import static framework.elements.BaseElement.isFileLoadingCompleteWaiter;
 
 
 public class InstallPage extends BaseSteamPage {
@@ -15,14 +20,10 @@ public class InstallPage extends BaseSteamPage {
 
     public void installGame() {
         btnInstall.clickElement();
-    }
-
-    public boolean isDownloadsExists() {
-
-            return baseElement.isDownloadsExists();
-
 
     }
 
-
+    public boolean isFileDownloaded() {
+        return isFileLoadingCompleteWaiter();
+    }
 }
